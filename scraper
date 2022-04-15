@@ -1,0 +1,13 @@
+#! /home/oursler_pdx_edu/bcenv/bin/python3
+
+import requests
+import json
+from datetime import date
+
+data = requests.get("http://www.psudataeng.com:8000/getBreadCrumbData")
+
+if (data.status_code == 200):
+    data = data.json()
+    with open("./data"+str(date.today())+"-breadcrumb.json", "w") as fp:
+   # fp.write(str(data.content))
+        json.dump(data, fp)
