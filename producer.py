@@ -1,3 +1,4 @@
+#! /home/production/bus-py-data/bin/python
 from datetime import date
 import json
 import ccloud_lib
@@ -10,6 +11,9 @@ if __name__ == '__main__':
     data = requests.get("http://www.psudataeng.com:8000/getBreadCrumbData")
 
     if (data.status_code == 200):
+        fdata = data.json()
+        with open("./data/"+str(date.today())+"-breadcrumb.json", "w") as fp:
+            json.dump(fdata, fp)
 
         # Reformat breadcrumb data
         json_data = json.loads(data.content)

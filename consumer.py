@@ -1,3 +1,5 @@
+#! /home/production/bus-py-data/bin/python
+import sys
 from confluent_kafka import Consumer
 from datetime import date
 import json
@@ -6,9 +8,6 @@ import ccloud_lib
 
 if __name__ == '__main__':
 
-    # Open today's data file
-    fp = open("data/breadcrumb-data-"+str(date.today())+".txt", "w")
-    fp.write('[\n')
 
     # Read arguments and configurations and initialize
     args = ccloud_lib.parse_args()
@@ -37,23 +36,15 @@ if __name__ == '__main__':
                 # Initial message consumption may take up to
                 # `session.timeout.ms` for the consumer group to
                 # rebalance and start consuming
-                print("Waiting for message or event/error in poll()")
                 continue
             elif msg.error():
-                print('error: {}'.format(msg.error()))
+                print('error: {}'.format(msg.error()), file=sys.stdout)
             else:
                 # Check for Kafka message
                 record_value = str(msg.value(), 'utf-8')
-                if (record_value == "END"):
-                    break
-                print(record_value)
-                fp.write(record_value+',\n')
+                print(record_value, file=sys.stdout)
     except KeyboardInterrupt:
-        fp.write(']\n')
-        fp.close()
         pass
     finally:
         # Leave group and commit final offsets
-        fp.write(']\n')
-        fp.close()
         consumer.close()
