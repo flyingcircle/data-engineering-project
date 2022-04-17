@@ -1,0 +1,11 @@
+Description = Consumer daemon
+After network.target = auditd.service
+
+[Service]
+Type = simple
+ExecStart = /usr/bin/bash /home/production/consumer_service.sh
+#ExecStop = /home/production/consumer_service.sh
+#ExecReload = /home/production/consumer_service.sh
+
+[Install]
+WantedBy = multi-user.target
