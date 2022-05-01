@@ -5,6 +5,8 @@ import json
 import sys
 import ccloud_lib
 
+from load_data_to_postgres import load_data
+
 # Reformat the date 
 def formatDate(date):
   datemap = {
@@ -176,4 +178,6 @@ if __name__ == '__main__':
         BreadCrumb, Trip = reshape(raw)
         print(BreadCrumb)
         print(Trip)
+        load_data(BreadCrumb, "BreadCrumb")
+        load_data(Trip, "Trip")
         consumer.close()
