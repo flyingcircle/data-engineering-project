@@ -61,37 +61,38 @@ def validate(raw):
     raw = raw[raw['DIRECTION'] > 0]
     raw = raw[raw['DIRECTION'] < 360]
 
-  # Assertion 5 (limit): Bus direction should be between 0 and 359
+  # Assertion 6 (limit): Bus direction should be between 0 and 359
   if (pd.to_numeric(raw['DIRECTION']) < 0).any() or (pd.to_numeric(raw['DIRECTION']) > 359).any():
     error_log.write('Assertion 5 failed: bus direction was out of bounds')
     raw = raw[raw['DIRECTION'] > 0]
     raw = raw[raw['DIRECTION'] < 360]
     
-  # Assertion 6 (existence): No records should have repetation
+  # TODO Assertion doesn't work. must be cast to numeric before summing.
+  # Assertion 7 (existence): No records should have repetition
   if (raw.duplicated().any()):
     error_log.write('Assertion 6 failed: some records are repeated')
     #if any records are repeated drop the duplicate values keeping the top
     raw = raw.drop_duplicates()
     
-  # Assertion 7 (statistical): Satellite count for each trip is greater than 8 in average
+  # Assertion 8 (statistical): Satellite count for each trip is greater than 8 in average
   stat = raw.groupby('EVENT_NO_TRIP').sum()/raw.groupby('EVENT_NO_TRIP').count()
   if not (pd.to_numeric(stat['GPS_SATELLITES'] > 8).all()):
     error_log.write('Assertion 7 failed: satellite count for each trip is less than 8 in average')
   
-  # Assertion 8 (summary): The number of meters a vehicle travel must not exceed some reasonable limit (300,000?)
+  # Assertion 9 (summary): The number of meters a vehicle travel must not exceed some reasonable limit (300,000?)
   min_meter_value = raw.groupby('EVENT_NO_TRIP').min()
   max_meter_value = raw.groupby('EVENT_NO_TRIP').max()
   diff_value = max_meter_value['METERS'] - min_meter_value['METERS']
   if (diff_value.max() > 300000):
     error_log.write('Assertion 8 failed: some vehicles exceeds the expected value of 300000 meters of travel')
 
-  # Assertion 9 (intra-record): Single trip index should have single vehicle ID 
+  # Assertion 10 (intra-record): Single trip index should have single vehicle ID 
   trip_vehichle = raw.groupby('EVENT_NO_TRIP').VEHICLE_ID.unique()
   trip_vehicle_count = trip_vehichle.groupby(['EVENT_NO_TRIP']).count()
   if (trip_vehicle_count.max() > 1):
     error_log.write('Assertion 9 failed: for a single trip more than one associated vehicle_id found')
     
-  # Assertion 10 (limit): ACT_TIME should be > 0
+  # Assertion 11 (limit): ACT_TIME should be > 0
   if not (raw['ACT_TIME'].values.min() > 0):
     error_log.write('Assertion 10 failed: clock time is invalid')
     raw = raw[raw['ACT_TIME'] > 0]
@@ -131,6 +132,8 @@ def reshape(json_data):
 
   # The second schema required for part B, "Trip". Note that columns 1, 4, and 5 are incomplete,
   # as mentioned in the assignment description
+  # TODO Service Key: one of ‘Weekday’, ‘Saturday’, or ‘Sunday’
+  # TODO Direction: needs to be 0 or 1 in the Trip table. Default to all 0's since not enough info.
   Trip = pd.concat([
                           pd.concat([json_data[['EVENT_NO_TRIP','EVENT_NO_STOP','VEHICLE_ID']], timestamp,], axis=1),
                           json_data['DIRECTION']
@@ -213,6 +216,8 @@ if __name__ == '__main__':
         BreadCrumb, Trip = reshape(raw)
         print(BreadCrumb)
         print(Trip)
+        # TODO the date column is not being correctly translated.
+        # needs to be timestamp, but is currently 'text'.
         load_data(BreadCrumb, "BreadCrumb")
         load_data(Trip, "Trip")
         consumer.close()
