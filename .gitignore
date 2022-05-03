@@ -1,3 +1,4 @@
 .DS_Store
 data/
 unzipped_data/
+__pycache__/
