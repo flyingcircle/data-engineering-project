@@ -43,9 +43,9 @@ def validate(raw):
     raw = raw[(raw['VELOCITY'] == np.nan) == (raw['DIRECTION'] == np.nan)]
 
   # Assertion 3 (limit): bus velocity must be beneath 80mph
-  if not (pd.to_numeric(raw['VELOCITY'])*2.236936 < 80).all():
+  if not (raw['VELOCITY']*2.236936 < 80).all():
     error_log.write('Assertion 3 failed: velocity exceeded 80mph')
-    raw = raw[pd.to_numeric(raw['VELOCITY'])*2.236936 < 80]
+    raw = raw[raw['VELOCITY']*2.236936 < 80]
 
   # Assertion 4 (summary): Meter count should always be ascending for a trip
   trips = raw.groupby('EVENT_NO_TRIP')
@@ -56,43 +56,37 @@ def validate(raw):
       raw = raw[raw['EVENT_NO_TRIP' != trip]]
                 
   # Assertion 5 (limit): Bus direction should be between 0 and 359
-  if (pd.to_numeric(raw['DIRECTION']) < 0).any() or (pd.to_numeric(raw['DIRECTION']) > 359).any():
-    error_log.write('Assertion 5 failed: bus direction was out of bounds')
-    raw = raw[raw['DIRECTION'] > 0]
-    raw = raw[raw['DIRECTION'] < 360]
-
-  # Assertion 6 (limit): Bus direction should be between 0 and 359
-  if (pd.to_numeric(raw['DIRECTION']) < 0).any() or (pd.to_numeric(raw['DIRECTION']) > 359).any():
+  if (raw['DIRECTION'] < 0).any() or (raw['DIRECTION'] > 359).any():
     error_log.write('Assertion 5 failed: bus direction was out of bounds')
     raw = raw[raw['DIRECTION'] > 0]
     raw = raw[raw['DIRECTION'] < 360]
     
   # TODO Assertion doesn't work. must be cast to numeric before summing.
-  # Assertion 7 (existence): No records should have repetition
+  # Assertion 6 (existence): No records should have repetition
   if (raw.duplicated().any()):
     error_log.write('Assertion 6 failed: some records are repeated')
     #if any records are repeated drop the duplicate values keeping the top
     raw = raw.drop_duplicates()
     
-  # Assertion 8 (statistical): Satellite count for each trip is greater than 8 in average
+  # Assertion 7 (statistical): Satellite count for each trip is greater than 8 in average
   stat = raw.groupby('EVENT_NO_TRIP').sum()/raw.groupby('EVENT_NO_TRIP').count()
   if not (pd.to_numeric(stat['GPS_SATELLITES'] > 8).all()):
     error_log.write('Assertion 7 failed: satellite count for each trip is less than 8 in average')
   
-  # Assertion 9 (summary): The number of meters a vehicle travel must not exceed some reasonable limit (300,000?)
+  # Assertion 8 (summary): The number of meters a vehicle travel must not exceed some reasonable limit (300,000?)
   min_meter_value = raw.groupby('EVENT_NO_TRIP').min()
   max_meter_value = raw.groupby('EVENT_NO_TRIP').max()
   diff_value = max_meter_value['METERS'] - min_meter_value['METERS']
   if (diff_value.max() > 300000):
     error_log.write('Assertion 8 failed: some vehicles exceeds the expected value of 300000 meters of travel')
 
-  # Assertion 10 (intra-record): Single trip index should have single vehicle ID 
+  # Assertion 9 (intra-record): Single trip index should have single vehicle ID 
   trip_vehichle = raw.groupby('EVENT_NO_TRIP').VEHICLE_ID.unique()
   trip_vehicle_count = trip_vehichle.groupby(['EVENT_NO_TRIP']).count()
   if (trip_vehicle_count.max() > 1):
     error_log.write('Assertion 9 failed: for a single trip more than one associated vehicle_id found')
     
-  # Assertion 11 (limit): ACT_TIME should be > 0
+  # Assertion 10 (limit): ACT_TIME should be > 0
   if not (raw['ACT_TIME'].values.min() > 0):
     error_log.write('Assertion 10 failed: clock time is invalid')
     raw = raw[raw['ACT_TIME'] > 0]
@@ -101,24 +95,25 @@ def validate(raw):
 
   return raw
 
-def reshape(json_data):
-  json_data['VELOCITY'] = pd.to_numeric(json_data['VELOCITY'])
+#TODO make into its own function
+def fix_types(json_data):
   json_data['ACT_TIME'] = pd.to_numeric(json_data['ACT_TIME'])
-  json_data['VELOCITY'] = pd.to_numeric(json_data['VELOCITY'])
   json_data['GPS_LATITUDE'] = pd.to_numeric(json_data['GPS_LATITUDE'])
   json_data['GPS_LONGITUDE'] = pd.to_numeric(json_data['GPS_LONGITUDE'])
   json_data['DIRECTION'] = pd.to_numeric(json_data['DIRECTION'])
   json_data['EVENT_NO_TRIP'] = pd.to_numeric(json_data['EVENT_NO_TRIP'])
   json_data['EVENT_NO_STOP'] = pd.to_numeric(json_data['EVENT_NO_STOP'])
   json_data['VEHICLE_ID'] = pd.to_numeric(json_data['VEHICLE_ID'])
-
   json_data['VELOCITY'].replace(to_replace='', value='0')
   json_data['VELOCITY'] = pd.to_numeric(json_data['VELOCITY']).apply(lambda x: x*2.236936)
-
   json_data['ACT_TIME'] = json_data['ACT_TIME'].apply(lambda x: str(timedelta(seconds=x)))
   json_data['OPD_DATE'] = json_data['OPD_DATE'].apply(lambda x: formatDate(x))
-  timestamp = json_data['OPD_DATE'] + json_data['ACT_TIME']
+  
+  return json_data
 
+def reshape(json_data):
+
+  timestamp = json_data['OPD_DATE'] + json_data['ACT_TIME']
   # The first schema required for part B, "BreadCrumb"
   BreadCrumb = json_data[[
                                 'GPS_LATITUDE', 
@@ -212,6 +207,7 @@ if __name__ == '__main__':
         pass
     finally:
         # Leave group and validate+reshape data
+        raw = fix_types(raw)
         raw = validate(raw)
         BreadCrumb, Trip = reshape(raw)
         print(BreadCrumb)
