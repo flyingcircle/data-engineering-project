@@ -3,16 +3,18 @@ from datetime import date
 import json
 import ccloud_lib
 import requests
-import sys
+import argparse
 import time
 from confluent_kafka import Producer, KafkaError
 
 if __name__ == '__main__':
     
     data = "no data"
-
-    if len(sys.argv) > 1:
-        filename = sys.argv[1]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d')
+    opts = parser.parse_args()
+    if opts.d:
+        filename = opts.d
         fp = open(filename)
         json_data = json.load(fp)
     else:
