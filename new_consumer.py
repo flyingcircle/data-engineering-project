@@ -167,8 +167,6 @@ if __name__ == '__main__':
                 df = fix_types(df)
                 df = validate(df)
                 BreadCrumb, Trip = reshape(df)
-                print(BreadCrumb)
-                print(Trip)
                 load_data(BreadCrumb, "BreadCrumb")
                 load_data(Trip, "Trip")
                 df = getNewDf()
@@ -178,24 +176,27 @@ if __name__ == '__main__':
                 print('error: {}'.format(msg.error()), file=sys.stdout)
             else:
                 # Check for Kafka message, add to dataframe
-                record_value = json.loads(msg.value())
-                df.loc[total_count] = [
-                  record_value['EVENT_NO_TRIP'],
-                  record_value['EVENT_NO_STOP'],
-                  record_value['OPD_DATE'],
-                  record_value['VEHICLE_ID'],
-                  record_value['METERS'],
-                  record_value['ACT_TIME'],
-                  record_value['VELOCITY'],
-                  record_value['DIRECTION'],
-                  record_value['RADIO_QUALITY'],
-                  record_value['GPS_LONGITUDE'],
-                  record_value['GPS_LATITUDE'],
-                  record_value['GPS_SATELLITES'],
-                  record_value['GPS_HDOP'],
-                  record_value['SCHEDULE_DEVIATION']
-                ]
-                total_count += 1
+                try:
+                    record_value = json.loads(msg.value())
+                    df.loc[total_count] = [
+                      record_value['EVENT_NO_TRIP'],
+                      record_value['EVENT_NO_STOP'],
+                      record_value['OPD_DATE'],
+                      record_value['VEHICLE_ID'],
+                      record_value['METERS'],
+                      record_value['ACT_TIME'],
+                      record_value['VELOCITY'],
+                      record_value['DIRECTION'],
+                      record_value['RADIO_QUALITY'],
+                      record_value['GPS_LONGITUDE'],
+                      record_value['GPS_LATITUDE'],
+                      record_value['GPS_SATELLITES'],
+                      record_value['GPS_HDOP'],
+                      record_value['SCHEDULE_DEVIATION']
+                    ]
+                    total_count += 1
+                except:
+                    continue
     except KeyboardInterrupt:
         pass
     finally:
