@@ -66,7 +66,7 @@ def validate(df: pd.DataFrame):
     error_log.write('Assertion 9 failed: for a single trip more than one associated vehicle_id found')
     
   # Assertion 10 (limit): ACT_TIME should be > 0
-  if not (df['ACT_TIME'].values.min() > 0):
+  if not (df['ACT_TIME'].min() > 0):
     error_log.write('Assertion 10 failed: clock time is invalid')
     df = df[df['ACT_TIME'] > 0]
     
@@ -82,7 +82,7 @@ def fix_types(df: pd.DataFrame):
   df['EVENT_NO_STOP'] = pd.to_numeric(df['EVENT_NO_STOP'])
   df['VEHICLE_ID'] = pd.to_numeric(df['VEHICLE_ID'])
   df['METERS'] = pd.to_numeric(df['METERS'])
-  df['VELOCITY'].replace(to_replace='', value='0')
+  df['VELOCITY'] = df['VELOCITY'].replace(to_replace='', value='0')
   df['VELOCITY'] = pd.to_numeric(df['VELOCITY']).apply(lambda x: x*2.236936)
   df['ACT_TIME'] = pd.to_numeric(df['ACT_TIME'])
   df['ACT_TIME'] = pd.to_timedelta(df['ACT_TIME'], unit='s')
@@ -119,6 +119,24 @@ def reshape(df: pd.DataFrame):
 
   return BreadCrumb, Trip
 
+def getNewDf():
+  return pd.DataFrame(columns=[
+        'EVENT_NO_TRIP',
+        'EVENT_NO_STOP',
+        'OPD_DATE',
+        'VEHICLE_ID',
+        'METERS',
+        'ACT_TIME',
+        'VELOCITY',
+        'DIRECTION',
+        'RADIO_QUALITY',
+        'GPS_LONGITUDE',
+        'GPS_LATITUDE',
+        'GPS_SATELLITES',
+        'GPS_HDOP',
+        'SCHEDULE_DEVIATION'
+    ])
+
 if __name__ == '__main__':
     # Read arguments and configurations and initialize
     args = ccloud_lib.parse_args()
@@ -139,28 +157,23 @@ if __name__ == '__main__':
 
     # Process messages
     total_count = 0
-    df = pd.DataFrame(columns=[
-        'EVENT_NO_TRIP',
-        'EVENT_NO_STOP',
-        'OPD_DATE',
-        'VEHICLE_ID',
-        'METERS',
-        'ACT_TIME',
-        'VELOCITY',
-        'DIRECTION',
-        'RADIO_QUALITY',
-        'GPS_LONGITUDE',
-        'GPS_LATITUDE',
-        'GPS_SATELLITES',
-        'GPS_HDOP',
-        'SCHEDULE_DEVIATION'
-    ])
+    df = getNewDf()
 
     try:
         while True:
             msg = consumer.poll(10)
-            if msg is None:
-                break
+            if msg is None and len(df.index) > 0:
+                # Leave group and validate+reshape data
+                df = fix_types(df)
+                df = validate(df)
+                BreadCrumb, Trip = reshape(df)
+                print(BreadCrumb)
+                print(Trip)
+                load_data(BreadCrumb, "BreadCrumb")
+                load_data(Trip, "Trip")
+                df = getNewDf()
+            elif msg is None:
+                continue
             elif msg.error():
                 print('error: {}'.format(msg.error()), file=sys.stdout)
             else:
@@ -186,12 +199,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
-        # Leave group and validate+reshape data
-        df = fix_types(df)
-        df = validate(df)
-        BreadCrumb, Trip = reshape(df)
-        print(BreadCrumb)
-        print(Trip)
-        load_data(BreadCrumb, "BreadCrumb")
-        load_data(Trip, "Trip")
         consumer.close()
