@@ -1,6 +1,7 @@
 #! /home/production/bus-py-data/bin/python
 from confluent_kafka import Consumer
 from datetime import date
+from dateutil import parser
 import pandas as pd
 import numpy as np
 import json
@@ -9,6 +10,7 @@ import ccloud_lib
 
 from load_data_to_postgres import load_data
 
+oldest_date = parser.parse("2020-01-01 00:00:00+00:00")
 
 def validate(df: pd.DataFrame):
   error_log = open('error_log_'+str(date.today()),'w')
@@ -66,9 +68,9 @@ def validate(df: pd.DataFrame):
     error_log.write('Assertion 9 failed: for a single trip more than one associated vehicle_id found')
     
   # Assertion 10 (limit): ACT_TIME should be > 0
-  if not (df['ACT_TIME'].min() > 0):
+  if not (df['ACT_TIME'].min() > oldest_date):
     error_log.write('Assertion 10 failed: clock time is invalid')
-    df = df[df['ACT_TIME'] > 0]
+    df = df[df['ACT_TIME'] > oldest_date]
     
   error_log.close()
 
