@@ -8,7 +8,6 @@ import time
 from confluent_kafka import Producer, KafkaError
 
 if __name__ == '__main__':
-    
     data = "no data"
     parser = argparse.ArgumentParser()
     parser.add_argument('-d')
@@ -30,6 +29,7 @@ if __name__ == '__main__':
         else:
             exit(1)
         # Read arguments and configurations and initialize
+
     args = ccloud_lib.parse_args()
     config_file = args.config_file
     topic = args.topic
@@ -47,8 +47,8 @@ if __name__ == '__main__':
     def acked(err, msg):
         global delivered_records
         """Delivery report handler called on
-		successful or failed delivery of message
-		"""
+                successful or failed delivery of message
+                """
         if err is not None:
             print("Failed to deliver message: {}".format(err))
         else:
