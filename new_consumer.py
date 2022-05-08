@@ -9,7 +9,7 @@ import ccloud_lib
 
 from load_data_to_postgres import load_data
 
-logging.basicConfig(filename='logs/consumer.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename='logs/consumer.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
 
 def validate(df: pd.DataFrame):
   # Assertion 1 (existence): All records have a lat/lon
