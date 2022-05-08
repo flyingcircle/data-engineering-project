@@ -171,6 +171,7 @@ if __name__ == '__main__':
                 logging.debug(f"loaded data!")
                 df = getNewDf()
             elif msg is None:
+                logging.debug(f"No breadcrumbs. Waiting a little...")
                 continue
             elif msg.error():
                 logging.error(msg.error())
@@ -195,7 +196,8 @@ if __name__ == '__main__':
                       record_value['SCHEDULE_DEVIATION']
                     ]
                     total_count += 1
-                except:
+                except Exception as e:
+                    logging.error(f"Failed to add breadcrumb record. {e}")
                     continue
     except KeyboardInterrupt:
         pass      
