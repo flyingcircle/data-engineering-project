@@ -9,7 +9,7 @@ import ccloud_lib
 
 from load_data_to_postgres import load_data
 
-logging.basicConfig(filename='logs/consumer.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
+logging.basicConfig(filename='/home/production/logs/consumer.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
 
 def validate(df: pd.DataFrame):
   # Assertion 1 (existence): All records have a lat/lon
@@ -160,7 +160,7 @@ if __name__ == '__main__':
     try:
         while True:
             msg = consumer.poll(10)
-            if msg is None and len(df.index) > 0:
+            if (msg is None and len(df.index) > 0):
                 # Leave group and validate+reshape data
                 logging.debug(f"processing #{len(df.index)} breadcrumbs...")
                 df = fix_types(df)
@@ -170,6 +170,7 @@ if __name__ == '__main__':
                 load_data(Trip, "Trip")
                 logging.debug(f"loaded data!")
                 df = getNewDf()
+                total_count = 0
             elif msg is None:
                 logging.debug(f"No breadcrumbs. Waiting a little...")
                 continue
@@ -196,8 +197,11 @@ if __name__ == '__main__':
                       record_value['SCHEDULE_DEVIATION']
                     ]
                     total_count += 1
+                    if (total_count % 10000 == 0):
+                      logging.debug("added 10000 records to df.")
                 except Exception as e:
                     logging.error(f"Failed to add breadcrumb record. {e}")
+                    logging.error(f"ERROR MSG: {msg.value()}")
                     continue
     except KeyboardInterrupt:
         pass      
