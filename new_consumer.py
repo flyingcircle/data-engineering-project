@@ -117,23 +117,23 @@ def reshape(df: pd.DataFrame):
 
   return BreadCrumb, Trip
 
-def getNewDf():
-  return pd.DataFrame(columns=[
-        'EVENT_NO_TRIP',
-        'EVENT_NO_STOP',
-        'OPD_DATE',
-        'VEHICLE_ID',
-        'METERS',
-        'ACT_TIME',
-        'VELOCITY',
-        'DIRECTION',
-        'RADIO_QUALITY',
-        'GPS_LONGITUDE',
-        'GPS_LATITUDE',
-        'GPS_SATELLITES',
-        'GPS_HDOP',
-        'SCHEDULE_DEVIATION'
-    ])
+def getNewData():
+  return {
+        'EVENT_NO_TRIP': [],
+        'EVENT_NO_STOP': [],
+        'OPD_DATE': [],
+        'VEHICLE_ID': [],
+        'METERS': [],
+        'ACT_TIME': [],
+        'VELOCITY': [],
+        'DIRECTION': [],
+        'RADIO_QUALITY': [],
+        'GPS_LONGITUDE': [],
+        'GPS_LATITUDE': [],
+        'GPS_SATELLITES': [],
+        'GPS_HDOP': [],
+        'SCHEDULE_DEVIATION': []
+  }
 
 if __name__ == '__main__':
     # Read arguments and configurations and initialize
@@ -155,21 +155,22 @@ if __name__ == '__main__':
 
     # Process messages
     total_count = 0
-    df = getNewDf()
+    data = getNewData()
 
     try:
         while True:
             msg = consumer.poll(10)
-            if (msg is None and len(df.index) > 0):
+            if (msg is None and total_count > 0):
                 # Leave group and validate+reshape data
-                logging.debug(f"processing #{len(df.index)} breadcrumbs...")
+                logging.debug(f"processing #{total_count} breadcrumbs...")
+                df = pd.from_dict(data)
                 df = fix_types(df)
                 df = validate(df)
                 BreadCrumb, Trip = reshape(df)
                 load_data(BreadCrumb, "BreadCrumb")
                 load_data(Trip, "Trip")
                 logging.debug(f"loaded data!")
-                df = getNewDf()
+                data = getNewData()
                 total_count = 0
             elif msg is None:
                 logging.debug(f"No breadcrumbs. Waiting a little...")
@@ -180,22 +181,8 @@ if __name__ == '__main__':
                 # Check for Kafka message, add to dataframe
                 try:
                     record_value = json.loads(msg.value())
-                    df.loc[total_count] = [
-                      record_value['EVENT_NO_TRIP'],
-                      record_value['EVENT_NO_STOP'],
-                      record_value['OPD_DATE'],
-                      record_value['VEHICLE_ID'],
-                      record_value['METERS'],
-                      record_value['ACT_TIME'],
-                      record_value['VELOCITY'],
-                      record_value['DIRECTION'],
-                      record_value['RADIO_QUALITY'],
-                      record_value['GPS_LONGITUDE'],
-                      record_value['GPS_LATITUDE'],
-                      record_value['GPS_SATELLITES'],
-                      record_value['GPS_HDOP'],
-                      record_value['SCHEDULE_DEVIATION']
-                    ]
+                    for key, value in data.items():
+                      value.append(record_value.get(key))
                     total_count += 1
                     if (total_count % 10000 == 0):
                       logging.debug("added 10000 records to df.")
