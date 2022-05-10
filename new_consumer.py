@@ -9,7 +9,7 @@ import ccloud_lib
 
 from load_data_to_postgres import load_data
 
-logging.basicConfig(filename='/home/production/logs/consumer.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
+logging.basicConfig(filename='/home/production/logs/consumer.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
 def validate(df: pd.DataFrame):
   # Assertion 1 (existence): All records have a lat/lon
@@ -109,10 +109,7 @@ def reshape(df: pd.DataFrame):
 
   # The second schema required for part B, "Trip". Note that columns 1, 4, and 5 are incomplete,
   # as mentioned in the assignment description
-  Trip = pd.concat([
-      pd.concat([df[['EVENT_NO_TRIP','EVENT_NO_STOP','VEHICLE_ID']], weekday,], axis=1),
-      df['DIRECTION']*0
-    ], axis=1)
+  Trip = pd.concat([df['EVENT_NO_TRIP'], df['EVENT_NO_STOP']*0, df['VEHICLE_ID'], weekday, df['DIRECTION']*0], axis=1)
   Trip.columns = ['trip_id','route_id','vehicle_id','service_key','direction']
 
   return BreadCrumb, Trip
@@ -162,14 +159,14 @@ if __name__ == '__main__':
             msg = consumer.poll(10)
             if (msg is None and total_count > 0):
                 # Leave group and validate+reshape data
-                logging.debug(f"processing #{total_count} breadcrumbs...")
+                logging.info(f"processing #{total_count} breadcrumbs...")
                 df = pd.DataFrame.from_dict(data)
                 df = fix_types(df)
                 df = validate(df)
                 BreadCrumb, Trip = reshape(df)
                 load_data(BreadCrumb, "BreadCrumb")
                 load_data(Trip, "Trip")
-                logging.debug(f"loaded data!")
+                logging.info(f"loaded data!")
                 data = getNewData()
                 total_count = 0
             elif msg is None:
@@ -185,7 +182,7 @@ if __name__ == '__main__':
                       value.append(record_value.get(key))
                     total_count += 1
                     if (total_count % 10000 == 0):
-                      logging.debug("added 10000 records to df.")
+                      logging.info("added 10000 records to df.")
                 except Exception as e:
                     logging.error(f"Failed to add breadcrumb record. {e}")
                     logging.error(f"ERROR MSG: {msg.value()}")
