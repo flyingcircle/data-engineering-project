@@ -163,7 +163,7 @@ if __name__ == '__main__':
             if (msg is None and total_count > 0):
                 # Leave group and validate+reshape data
                 logging.debug(f"processing #{total_count} breadcrumbs...")
-                df = pd.from_dict(data)
+                df = pd.DataFrame.from_dict(data)
                 df = fix_types(df)
                 df = validate(df)
                 BreadCrumb, Trip = reshape(df)
