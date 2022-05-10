@@ -191,7 +191,9 @@ if __name__ == '__main__':
                     logging.error(f"ERROR MSG: {msg.value()}")
                     continue
     except KeyboardInterrupt:
-        pass      
+        pass
+    except Exception as e:
+        logging.error(f"UNEXPECTED ERROR: {e}")
     finally:
         logging.error("Exiting service function. Should not happen!")
         consumer.close()

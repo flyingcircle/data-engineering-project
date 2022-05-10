@@ -64,7 +64,6 @@ if __name__ == '__main__':
         time.sleep(0.0001)
         producer.poll(0)
 
-    producer.produce(topic, key=record_key, value="END", on_delivery=acked)
     producer.flush()
 
     print("{} messages were produced to topic {}!".format(delivered_records, topic))
