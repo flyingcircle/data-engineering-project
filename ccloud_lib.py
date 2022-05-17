@@ -105,6 +105,8 @@ def parse_args():
                           dest="topic",
                           help="topic name",
                           required=True)
+    optional = parser.add_argument_group('optional arguments')
+    optional.add_argument('-d', dest="datafile", help="path to optional input data file", required=False)
     args = parser.parse_args()
 
     return args

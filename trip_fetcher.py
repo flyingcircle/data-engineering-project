@@ -3,8 +3,12 @@ import numpy as np
 import pandas as pd
 import requests
 import regex as re
+import json
+from datetime import date
 
-if __name__ == "__main__":
+ 
+
+def get_data():
 	page = requests.get("http://www.psudataeng.com:8000/getStopEvents/")
 
 	if page.status_code == 200:
@@ -37,6 +41,12 @@ if __name__ == "__main__":
 			"direction": directions,
 			"service_key": service_keys, 
 		})
-		
-		print(trips.head())
+		res = trips.to_json(orient="records")
+		parsed = json.loads(res)
+		print(parsed[300])
+		out_file = open(str(date.today())+"-stopevent.json", "w")
+		json.dump(parsed, out_file)
+		return parsed
 
+if __name__ == "__main__":
+	 get_data()
