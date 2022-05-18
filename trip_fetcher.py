@@ -44,7 +44,7 @@ def get_data():
 		res = trips.to_json(orient="records")
 		parsed = json.loads(res)
 		print(parsed[300])
-		out_file = open("../data/" + str(date.today())+"-stopevent.json", "w")
+		out_file = open("/home/production/data/" + str(date.today())+"-stopevent.json", "w")
 		json.dump(parsed, out_file)
 		return parsed
 
