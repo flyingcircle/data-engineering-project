@@ -11,7 +11,7 @@ import ccloud_lib
 from reshape_data_stops import getNewData
 from validate_stops import fix_types, validate
 
-logging.basicConfig(filename='/home/production/stop_consumer.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
+logging.basicConfig(filename='/home/production/logs/stop_consumer.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
 if __name__ == '__main__':
     # Read arguments and configurations and initialize
@@ -47,7 +47,7 @@ if __name__ == '__main__':
                 df = validate(df)
                 res = df.to_json(orient="records")
                 parsed = json.loads(res)
-                out_file = open(str("../data/" + date.today())+"-stopeventoutput.json", "w")
+                out_file = open("../data/" + str(date.today())+"-stopeventoutput.json", "w")
                 json.dump(parsed, out_file)
                 data = getNewData()
                 total_count = 0   
