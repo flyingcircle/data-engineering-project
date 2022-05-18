@@ -47,7 +47,7 @@ if __name__ == '__main__':
                 df = validate(df)
                 res = df.to_json(orient="records")
                 parsed = json.loads(res)
-                out_file = open("../data/" + str(date.today())+"-stopeventoutput.json", "w")
+                out_file = open("/home/production/data/" + str(date.today())+"-stopeventoutput.json", "w")
                 json.dump(parsed, out_file)
                 data = getNewData()
                 total_count = 0   
