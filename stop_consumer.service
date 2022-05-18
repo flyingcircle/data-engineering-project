@@ -1,0 +1,13 @@
+[Unit]
+Description=Consumer service for Stop Events pipeline
+After network.target = auditd.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/usr/bin/bash /home/production/data-engineering-project/stop_consumer_service.sh
+
+[Install]
+WantedBy = multi-user.target
