@@ -2,6 +2,7 @@
 from datetime import date
 import json
 import ccloud_lib
+import logging
 import requests
 import argparse
 import time
@@ -10,7 +11,7 @@ from confluent_kafka import Producer, KafkaError
 from trip_fetcher import get_data
 
 if __name__ == '__main__':
-    
+    logging.basicConfig(filename='/home/production/logs/stop_producer.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
  # Read arguments and configurations and initialize
     args = ccloud_lib.parse_args()
     config_file = args.config_file
@@ -40,10 +41,11 @@ if __name__ == '__main__':
 		successful or failed delivery of message
 		"""
         if err is not None:
-            print("Failed to deliver message: {}".format(err))
+            logging.info("Failed to deliver message: {}".format(err))
         else:
             print("record " + str(delivered_records) + " sent")
             delivered_records += 1
+            logging.info(f"processing #{delivered_records} breadcrumbs...")
 
     record_key = str(date.today())
 
@@ -57,4 +59,4 @@ if __name__ == '__main__':
     producer.produce(topic, key=record_key, value="END", on_delivery=acked)
     producer.flush()
 
-    print("{} messages were produced to topic {}!".format(delivered_records, topic))
+    logging.info("{} messages were produced to topic {}!".format(delivered_records, topic))
