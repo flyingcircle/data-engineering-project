@@ -12,7 +12,7 @@ from trip_fetcher import get_data
 
 if __name__ == '__main__':
     logging.basicConfig(filename='/home/production/logs/stop_producer.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
- # Read arguments and configurations and initialize
+    # Read arguments and configurations and initialize
     args = ccloud_lib.parse_args()
     config_file = args.config_file
     topic = args.topic
