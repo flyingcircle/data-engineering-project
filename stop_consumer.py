@@ -7,7 +7,7 @@ import numpy as np
 import json
 import ccloud_lib
 
-# from load_data_to_postgres import load_data
+from load_data_to_postgres import load_data
 from reshape_data_stops import getNewData
 from validate_stops import fix_types, validate
 
@@ -45,6 +45,7 @@ if __name__ == '__main__':
                 df = pd.DataFrame.from_dict(data)
                 df = validate(df)
                 df = fix_types(df)
+                load_data(df, "Stop")
                 res = df.to_json(orient="records")
                 parsed = json.loads(res)
                 out_file = open("/home/production/data/" + str(date.today())+"-stopeventoutput.json", "w")
