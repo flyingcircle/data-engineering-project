@@ -42,5 +42,23 @@ def validate(df: pd.DataFrame):
   return df
 
 def fix_types(df: pd.DataFrame):
+  from enum import Enum
+
+  df['trip_id'] = pd.to_numeric(df['trip_id'])
+  df['route_num'] = pd.to_numeric(df['route_num'])
+
+  class Service(Enum):
+    Weekday = 0
+    Saturday = 1
+    Sunday = 2
+
+  class Direction (Enum):
+    Out = 0
+    Back = 1
+
+  directions = [Direction.Out if x == 0 else Direction.Back for x in df['direction']]
+  services = [Service.Weekday if x == 'W' else Service.Saturday if x == 'S' else Service.Sunday for x in df['service_key']]
+  df['direction'] = directions
+  df['service_key'] = services
   return df
 

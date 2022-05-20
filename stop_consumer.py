@@ -43,8 +43,8 @@ if __name__ == '__main__':
                 # Leave group and validate+reshape data
                 logging.info(f"processing #{total_count} breadcrumbs...")
                 df = pd.DataFrame.from_dict(data)
-                df = fix_types(df)
                 df = validate(df)
+                df = fix_types(df)
                 res = df.to_json(orient="records")
                 parsed = json.loads(res)
                 out_file = open("/home/production/data/" + str(date.today())+"-stopeventoutput.json", "w")
