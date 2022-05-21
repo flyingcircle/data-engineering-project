@@ -2,6 +2,7 @@ import logging
 import pandas as pd
 import numpy as np
 
+
 def validate(df: pd.DataFrame):
   logging.basicConfig(filename='stop_consumer_validations.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
   #Assertion 1 (existence) All records have a service key
@@ -42,18 +43,11 @@ def validate(df: pd.DataFrame):
   return df
 
 def fix_types(df: pd.DataFrame):
-  from enum import Enum
-
   df['trip_id'] = pd.to_numeric(df['trip_id'])
   df['route_num'] = pd.to_numeric(df['route_num'])
-  df['direction'] = pd.to_numeric(df['directions'])
+  df['direction'] = pd.to_numeric(df['direction'])
 
-  class Service(Enum):
-    Weekday = 0
-    Saturday = 1
-    Sunday = 2
-
-  services = [Service.Weekday if x == 'W' else Service.Saturday if x == 'S' else Service.Sunday for x in df['service_key']]
+  services = ["Weekday" if x == 'W' else "Saturday" if x == 'S' else "Sunday" for x in df['service_key']]
   df['service_key'] = services
   return df
 
